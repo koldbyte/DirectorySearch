@@ -19,9 +19,9 @@ public class RunnableSearchSingleFile implements Runnable {
 	// output
 	private List<String> results = null;
 
-	//status
+	// status
 	public Boolean isFinished = false;
-	
+
 	@Override
 	public void run() {
 		results = searchFile(file);
@@ -31,43 +31,33 @@ public class RunnableSearchSingleFile implements Runnable {
 	private List<String> searchFile(File f) {
 		List<String> results = new ArrayList<String>();
 
-		if (f==null || !f.isFile())
+		if (f == null || !f.isFile())
 			return results;
 
-		String ext = getFileExtension(f);
-		if (ext.matches(this.fileExtensions)) {
-			// this.totalSearched++;
-			System.out.println("Starting search in matched file: " + f.getName());
-			try (BufferedReader in = new BufferedReader(new FileReader(f))) {
-				String line = null;
-				while ((line = in.readLine()) != null) {
-					if (caseSensitive) {
-						if (line.contains(this.key)) {
-							results.add(line);
-						}
-					} else {
-						if (line.toLowerCase().contains(this.key.toLowerCase())) {
-							results.add(line);
-						}
+		// this.totalSearched++;
+		System.out.println("Starting search in matched file: " + f.getName());
+		try (BufferedReader in = new BufferedReader(new FileReader(f))) {
+			String line = null;
+			while ((line = in.readLine()) != null) {
+				if (caseSensitive) {
+					if (line.contains(this.key)) {
+						results.add(line);
+					}
+				} else {
+					if (line.toLowerCase().contains(this.key.toLowerCase())) {
+						results.add(line);
 					}
 				}
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
 			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
+
 		return results;
 	}
 
-	private String getFileExtension(File file) {
-		String name = file.getName();
-		int lastIndexOf = name.lastIndexOf(".");
-		if (lastIndexOf == -1) {
-			return ""; // empty extension
-		}
-		return name.substring(lastIndexOf);
-	}
 
 	public String getFileExtensions() {
 		return fileExtensions;
@@ -113,10 +103,8 @@ public class RunnableSearchSingleFile implements Runnable {
 		super();
 	}
 
-	public RunnableSearchSingleFile(String fileExtensions,
-			Boolean caseSensitive, String key, File file) {
+	public RunnableSearchSingleFile(Boolean caseSensitive, String key, File file) {
 		super();
-		this.fileExtensions = fileExtensions;
 		this.caseSensitive = caseSensitive;
 		this.key = key;
 		this.file = file;

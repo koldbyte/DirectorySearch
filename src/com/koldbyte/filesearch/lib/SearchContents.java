@@ -26,7 +26,7 @@ public class SearchContents {
 	public Integer totalSearched = 0;
 	public Integer totalFiles = 0;
 	public Integer totalDirs = 0;
-	
+
 	public String getLocation() {
 		return location;
 	}
@@ -90,28 +90,37 @@ public class SearchContents {
 
 		List<Thread> threads = new ArrayList<Thread>();
 		List<RunnableSearchSingleFile> searches = new ArrayList<RunnableSearchSingleFile>();
-		
+
 		if (root.isDirectory()) {
 			// search in directory
 			queue.addAll(Arrays.asList(root.listFiles()));
 			while (!queue.isEmpty()) {
 				File f = queue.poll();
 				if (f.isDirectory()) {
-					System.out.println("Starting search in sub: " + f.getName());
+					/*
+					 * System.out.println("Starting search in sub: " +
+					 * f.getName());
+					 */
 					this.totalDirs++;
-					queue.addAll(Arrays.asList(f.listFiles()));
+					for (File file : f.listFiles()) {
+						if (file.isDirectory()) {
+							queue.add(file);
+						} else if (file.isFile()) {
+							String ext = getFileExtension(file);
+							if (ext.matches(this.fileExtensions)) {
+								queue.add(file);
+							}
+						}
+					}
+					// queue.addAll(Arrays.asList(f.listFiles()));
 				} else {
 					// search in file
-					//System.out.println("Starting search in file: " + f.getName());
-					
-					/*List<String> result = searchFile(f);
-					this.totalFiles++;
-					if (!result.isEmpty()) {
-						results.put(f, result);
-					}*/
-					
-					//new code for multi-threading
-					RunnableSearchSingleFile rssf = new RunnableSearchSingleFile(fileExtensions,caseSensitive,key,f);
+					// System.out.println("Starting search in file: " +
+					// f.getName());
+
+					// new code for multi-threading
+					RunnableSearchSingleFile rssf = new RunnableSearchSingleFile(
+							caseSensitive, key, f);
 					Thread t = new Thread(rssf);
 					t.start();
 					threads.add(t);
@@ -125,20 +134,21 @@ public class SearchContents {
 				results.put(root, result);
 		}
 		
-		for(Thread thread: threads){
+		System.out.println("Total Threads : " + threads.size());
+		for (Thread thread : threads) {
 			try {
 				thread.join();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
-		
-		//here all thread should have finished processing
-		for(RunnableSearchSingleFile search: searches){
+
+		// here all thread should have finished processing
+		for (RunnableSearchSingleFile search : searches) {
 			List<String> result = search.getResults();
 			this.totalFiles++;
-			if(!search.isFinished){
-				System.out.println("Search was not finished");
+			if (!search.isFinished) {
+				System.out.println("Search was not finished.");
 			}
 			if (!result.isEmpty()) {
 				results.put(search.getFile(), result);
@@ -157,7 +167,7 @@ public class SearchContents {
 		if (ext.matches(this.fileExtensions)) {
 			this.totalSearched++;
 			// System.out.println("Starting search in matched file: " +
-			// f.getName()); 
+			// f.getName());
 			try (BufferedReader in = new BufferedReader(new FileReader(f))) {
 				String line = null;
 				while ((line = in.readLine()) != null) {

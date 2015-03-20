@@ -145,6 +145,8 @@ public class FileSearchApp {
 				}
 
 				if (noErrors) {
+					Long startTime,endTime;
+					startTime = System.currentTimeMillis();
 					SearchResults results = new SearchResults();
 					results.initTabs(new SearchContents(dir, key, 0,
 							extensions, isCaseSensitive.isSelected()).search());
@@ -153,6 +155,8 @@ public class FileSearchApp {
 					} catch (Exception e1) {
 						e1.printStackTrace();
 					}
+					endTime = System.currentTimeMillis();
+					JOptionPane.showMessageDialog(frmFindInFiles, "Total Time taken : " + (endTime-startTime) + "ms.");
 				} else {
 					JOptionPane.showMessageDialog(frmFindInFiles, msg);
 				}
