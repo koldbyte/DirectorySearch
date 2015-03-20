@@ -86,28 +86,36 @@ public class SearchContents {
 
 		File root = new File(this.location);
 
-		// System.out.println("Starting search in root: " + root.getName());
+		System.out.println("Starting search in root: " + root.getName());
 
+		List<Thread> threads = new ArrayList<Thread>();
+		List<RunnableSearchSingleFile> searches = new ArrayList<RunnableSearchSingleFile>();
+		
 		if (root.isDirectory()) {
 			// search in directory
 			queue.addAll(Arrays.asList(root.listFiles()));
 			while (!queue.isEmpty()) {
 				File f = queue.poll();
 				if (f.isDirectory()) {
-					// System.out.println("Starting search in sub: " +
-					// f.getName());
+					System.out.println("Starting search in sub: " + f.getName());
 					this.totalDirs++;
 					queue.addAll(Arrays.asList(f.listFiles()));
 				} else {
 					// search in file
-					// System.out.println("Starting search in file: " +
-					// f.getName());
+					//System.out.println("Starting search in file: " + f.getName());
 					
-					List<String> result = searchFile(f);
+					/*List<String> result = searchFile(f);
 					this.totalFiles++;
 					if (!result.isEmpty()) {
 						results.put(f, result);
-					}
+					}*/
+					
+					//new code for multi-threading
+					RunnableSearchSingleFile rssf = new RunnableSearchSingleFile(fileExtensions,caseSensitive,key,f);
+					Thread t = new Thread(rssf);
+					t.start();
+					threads.add(t);
+					searches.add(rssf);
 				}
 			}
 		} else {
@@ -115,6 +123,26 @@ public class SearchContents {
 			List<String> result = searchFile(root);
 			if (!result.isEmpty())
 				results.put(root, result);
+		}
+		
+		for(Thread thread: threads){
+			try {
+				thread.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		//here all thread should have finished processing
+		for(RunnableSearchSingleFile search: searches){
+			List<String> result = search.getResults();
+			this.totalFiles++;
+			if(!search.isFinished){
+				System.out.println("Search was not finished");
+			}
+			if (!result.isEmpty()) {
+				results.put(search.getFile(), result);
+			}
 		}
 		return results;
 	}
