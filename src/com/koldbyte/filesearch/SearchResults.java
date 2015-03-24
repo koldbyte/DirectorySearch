@@ -13,6 +13,7 @@ import java.util.Map.Entry;
 
 import javax.swing.JFrame;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.border.EmptyBorder;
@@ -69,14 +70,17 @@ public class SearchResults extends JFrame {
 	}
 
 	public void initTabs(Map<File, List<String>> results) {
+		int totalOccurrences = 0;
 		Iterator<Entry<File, List<String>>> it = results.entrySet().iterator();
 		while (it.hasNext()) {
 			Entry<File, List<String>> pair = it.next();
 			if (pair.getValue().size() > 0) {
+				totalOccurrences += pair.getValue().size();
 				JPanel jplInnerPanel1 = createInnerPanel(pair.getValue());
 				tabbedPane.addTab(pair.getKey().getName(), jplInnerPanel1);
 			}
 		}
+		JOptionPane.showMessageDialog(this, "Total Occurrences " + totalOccurrences);
 	}
 
 	protected JPanel createInnerPanel(List<String> text) {
