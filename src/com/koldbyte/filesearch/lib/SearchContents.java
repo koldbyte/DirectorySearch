@@ -16,6 +16,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class SearchContents {
 	private String location;
@@ -27,6 +30,9 @@ public class SearchContents {
 	public Integer totalFiles = 0;
 	public Integer totalDirs = 0;
 
+	//Initializing ExecutorS Service
+	private static ExecutorService executorService = Executors.newFixedThreadPool(15);
+	
 	public String getLocation() {
 		return location;
 	}
@@ -88,7 +94,6 @@ public class SearchContents {
 
 		System.out.println("Starting search in root: " + root.getName());
 
-		List<Thread> threads = new ArrayList<Thread>();
 		List<RunnableSearchSingleFile> searches = new ArrayList<RunnableSearchSingleFile>();
 
 		if (root.isDirectory()) {
@@ -114,16 +119,15 @@ public class SearchContents {
 					}
 					// queue.addAll(Arrays.asList(f.listFiles()));
 				} else {
-					// search in file
-					// System.out.println("Starting search in file: " +
-					// f.getName());
+					/*//search in file
+					 System.out.println("Starting search in file: " +
+					 f.getName());*/
 
 					// new code for multi-threading
 					RunnableSearchSingleFile rssf = new RunnableSearchSingleFile(
 							caseSensitive, key, f);
-					Thread t = new Thread(rssf);
-					t.start();
-					threads.add(t);
+
+					executorService.submit(rssf);
 					searches.add(rssf);
 				}
 			}
@@ -134,15 +138,13 @@ public class SearchContents {
 				results.put(root, result);
 		}
 		
-		System.out.println("Total Threads : " + threads.size());
-		for (Thread thread : threads) {
-			try {
-				thread.join();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+		executorService.shutdown();
+		try {
+			executorService.awaitTermination(20, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
-
+		
 		// here all thread should have finished processing
 		for (RunnableSearchSingleFile search : searches) {
 			List<String> result = search.getResults();
@@ -154,6 +156,7 @@ public class SearchContents {
 				results.put(search.getFile(), result);
 			}
 		}
+		
 		return results;
 	}
 
